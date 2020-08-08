@@ -1420,7 +1420,7 @@ Spring Boot 包含以下预定义的日志记录组，可以直接使用：
 | `logging.pattern.dateformat` | `LOG_DATEFORMAT_PATTERN` | 日志日期格式的 Appender 模式。（仅支持默认的 Logback 设置。） |
 | `logging.pattern.file` | `FILE_LOG_PATTERN` | 要在文件中使用的日志模式（如果启用了 `LOG_FILE`）。（仅支持默认的 Logback 设置。） |
 | `logging.pattern.level` | `LOG_LEVEL_PATTERN` | 渲染日志级别时使用的格式（默认值为 `％5p`）。（仅支持默认的 Logback 设置。） |
-| `PID` | `PID` | 当前进程 ID（如果可能，则在未定义为 OS 环境变量时发现）。 | 
+| `PID` | `PID` | 当前进程 ID（如果可能，则在未定义为 OS 环境变量时发现）。 |
 
 所有受支持的日志记录系统在解析其配置文件时都可以参考系统属性。有关示例，请参阅 `spring-boot.jar` 中的默认配置：
 
@@ -1463,7 +1463,7 @@ Spring Boot 包含许多 Logback 扩展，可用于进行高级配置。您可�
 ERROR in ch.qos.logback.core.joran.spi.Interpreter@4:71 - no applicable action for [springProperty], current ElementPath is [[configuration][springProperty]]
 ERROR in ch.qos.logback.core.joran.spi.Interpreter@4:71 - no applicable action for [springProfile], current ElementPath is [[configuration][springProfile]]
 ```
- 
+
 <a id="_profile_specific_configuration"></a>
 
 ### 26.7.1、特定 Profile 配置
@@ -4828,16 +4828,34 @@ Java Management Extensions（JMX，Java 管理扩展）提供了一种监视和�
 
 ## 45、测试
 
-## 40. 测试 (1.4.1.RELEASE)
+## 40. 测试 (1.4.1.RELEASE,正在更新到新版本)
 
 Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，主要分两个模块：`spring-boot-test`包含核心组件，`spring-boot-test-autoconfigure`为测试提供自动配置。
 
 大多数开发者只需要引用`spring-boot-starter-test` ‘Starter’，它既提供Spring Boot测试模块，也提供JUnit，AssertJ，Hamcrest和很多有用的依赖。
+
+```xm
+The starter also brings the vintage engine so that you can run both JUnit 4 and JUnit 5 tests. If you have migrated your tests to JUnit 5, you should exclude JUnit 4 support, as shown in the following example:
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+    <exclusions>
+        <exclusion>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+
+
+
 ## 40.1 测试作用域依赖
 
 如果使用`spring-boot-starter-test` ‘Starter’（在`test``scope`内），你将发现下列被提供的库：
 
-- [JUnit](http://junit.org/) - 事实上的(de-facto)标准，用于Java应用的单元测试。
+- [JUnit5](http://junit.org/) -(包含与JUnit4兼容的原始引擎): 事实上的(de-facto)标准，用于Java应用的单元测试。
 - [Spring Test](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle/#integration-testing.html) & Spring Boot Test  - 对Spring应用的集成测试支持。
 - [AssertJ](http://joel-costigliola.github.io/assertj/) - 一个流式断言库。
 - [Hamcrest](http://hamcrest.org/JavaHamcrest/) - 一个匹配对象的库（也称为约束或前置条件）。
@@ -4845,10 +4863,10 @@ Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，
 - [JSONassert](https://github.com/skyscreamer/JSONassert) - 一个针对JSON的断言库。
 - [JsonPath](https://github.com/jayway/JsonPath) - 用于JSON的XPath。
 
-这是写测试用例经常用到的库，如果它们不能满足要求，你可以随意添加其他的依赖。
+这是写测试用例经常用到的库，如果它们不能满足要求，你可以添加其他依赖。
 ### 40.2 测试Spring应用
 
-依赖注入主要优势之一就是它能够让你的代码更容易进行单元测试。你只需简单的通过`new`操作符实例化对象，甚至不需要涉及Spring，也可以使用模拟对象替换真正的依赖。
+依赖注入的一个主要优势即是它使得测试代码更加容易。你只需简单的通过`new`操作符实例化对象，甚至不需要涉及Spring，也可以使用模拟对象替换真正的依赖。
 
 你常常需要在进行单元测试后，开始集成测试（在这个过程中只需要涉及到Spring的`ApplicationContext`）。在执行集成测试时，不需要部署应用或连接到其他基础设施是非常有用的，Spring框架为实现这样的集成测试提供了一个专用的测试模块，通过声明`org.springframework:spring-test`的依赖，或使用`spring-boot-starter-test` ‘Starter’就可以使用它了。
 
