@@ -4828,7 +4828,6 @@ Java Management Extensions（JMX，Java 管理扩展）提供了一种监视和�
 
 ## 45、测试
 
-<a id="boot-features-websockets"></a>
 ##40. 测试 (1.4.1.RELEASE)
 
 Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，主要分两个模块：`spring-boot-test`包含核心组件，`spring-boot-test-autoconfigure`为测试提供自动配置。
