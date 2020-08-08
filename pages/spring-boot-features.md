@@ -4891,7 +4891,7 @@ Spring Boot应用只是一个Spring `ApplicationContext`，所以在测试时对
 
 默认情况下`@SpringBootTest`不会启动服务器。你可以使用`@SpringBootTest`的`webEnvironment`属性定义如何运行测试：
 
-* `MOCK` (默认)：加载web `ApplicationContext`，并提供一个模拟web环境。使用该注解时内嵌servlet容器将不会启动。如果classpath下不存在web环境，该模式将创建一个常规的非web `ApplicationContext`。此属性结合 [`@AutoConfigureMockMvc` 或 `@AutoConfigureWebTestClient`](https://docs.spring.io/spring-boot/docs/2.2.6.RELEASE/reference/html/spring-boot-features.html#boot-features-testing-spring-boot-applications-testing-with-mock-environment) 可用来对web应用进行基于mock的测试。
+* `MOCK` (默认)：加载web `ApplicationContext`，并提供一个模拟web环境。使用该注解时不会启动内嵌服务器。如果classpath下不存在web环境，该模式将创建一个常规的非web `ApplicationContext`。此属性结合 [`@AutoConfigureMockMvc` 或 `@AutoConfigureWebTestClient`](https://docs.spring.io/spring-boot/docs/2.2.6.RELEASE/reference/html/spring-boot-features.html#boot-features-testing-spring-boot-applications-testing-with-mock-environment) 可用来对web应用进行基于mock的测试。
 
 * `RANDOM_PORT` - 加载`WebServerApplicationContext`，并提供一个真实的web环境。使用该模式内嵌容器将启动，并监听在一个随机端口。
 
@@ -4926,9 +4926,9 @@ class MyWebFluxTests { ... }
 
 如果你熟悉Spring测试框架，你可能经常通过`@ContextConfiguration(classes=…)`指定加载哪些Spring `@Configuration`类，你也可能经常在测试类中使用内嵌`@Configuration`类。
 
-测试Spring Boot应用通常不需要这些，即使你没有显式定义一个主配置类，Spring Boot的`@*Test`注解会自动搜索主配置类。
+测试Spring Boot应用通常不需要这些，如果你没有显式定义一个主配置类，Spring Boot的`@*Test`注解会自动搜索主配置类。
 
-搜索算法是从包含测试类的package开始搜索，直到发现`@SpringBootApplication`或`@SpringBootConfiguration`注解的类。只要按[合理的方式组织代码](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#using-boot-structuring-your-code)，通常都会找到主配置类。
+搜索算法是从包含测试类的package开始搜索，直到发现`@SpringBootApplication`或`@SpringBootConfiguration`注解的类。只要你按照[合理的方式组织代码](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#using-boot-structuring-your-code)，通常就可找到你的主配置。
 
 ```
 如果你想使用测试注解测试应用的特定部分，则应避免在主方法的应用程序类上添加针对于特定区域的配置设置。
@@ -5186,9 +5186,9 @@ Spring的测试框架在测试之间缓存应用程序上下文，并为共享�
 
 
 #### 25.3.10 自动配置测试
-Spring Boot的自动配置系统对应用来说很合适，但用于测试就有点杀鸡用牛刀了，测试时只加载需要的应用片段（slice）通常是有好处的。例如，你可能想测试Spring MVC控制器映射URLs是否正确，且不想在这些测试中涉及到数据库调用；或者你想测试JPA实体，那测试运行时你可能对web层不感兴趣。
+Spring Boot的自动配置系统对应用来说很合适，但用于测试就有点多余了。测试应用的片段时通常只需加载部分配置。例如，你可能想测试Spring MVC控制器映射URLs是否正确，且不想在这些测试中涉及到数据库调用；或者你想测试JPA实体，那测试运行时你可能对web层不感兴趣。
 
-`spring-boot-test-autoconfigure`模块包含很多用来自动配置这些片段（slices）的注解，每个工作方式都相似，都是提供一个`@…Test`注解，然后加载`ApplicationContext`，使用一个或多个`@AutoConfigure…`注解自定义设置。
+`spring-boot-test-autoconfigure`模块包含很多用来自动配置这些片段（slices）的注解，每个工作方式都相似，都是提供一个用于加载`ApplicationContext`的`@…Test`注解，以及使用一个或多个`@AutoConfigure…`注解自定义自动配置的设置。
 
 ```markdown
 每个切片将组件扫描限制为适当的组件，并加载一组非常受限制的自动配置类。如果您需要排除其中之一，则大多数@ ... Test注释都提供了excludeAutoConfiguration属性。或者，您可以使用@ ImportAutoConfiguration＃exclude。
@@ -5205,7 +5205,7 @@ Spring Boot的自动配置系统对应用来说很合适，但用于测试就有
 
 
 #### 25.3.11 自动配置的JSON测试
-你可以使用`@JsonTest`测试对象JSON序列化和反序列化是否工作正常。该注解将自动配置JSON mapper,可以是下列库之一：
+你可以使用`@JsonTest`注解测试对象JSON序列化和反序列化是否工作正常。该注解将自动配置JSON mapper,可以是下列库之一：
 
 - Jackson `ObjectMapper`，所有`@JsonComponent`bean和所有Jackson `Modules`。
 - Gson
@@ -5369,7 +5369,7 @@ Spring Boot创建的webDriver范围将替换任何用户定义的同名范围。
 
 #### 25.3.13 自动配置的Spring WebFlux测试
 
-你可以使用`@WebFluxTest`注解测试Spring WebFlux控制器是否按预期工作。`@WebFluxTest`自动配置春季WebFlux基础设施和限制扫描豆`@Controller`，`@ControllerAdvice`，`@JsonComponent`，`Converter`，`GenericConverter`，`WebFilter`，和`WebFluxConfigurer`。使用注释`@Component`时，不扫描常规Bean `@WebFluxTest`。
+你可以使用`@WebFluxTest`注解测试Spring WebFlux控制器是否按预期工作。`@WebFluxTest`自动配置Spring WebFlux基础设施并只扫描`@Controller`，`@ControllerAdvice`，`@JsonComponent`，`Converter`，`GenericConverter`，`WebFilter`，和`WebFluxConfigurer`。 `@WebFluxTest`不扫描常规的`@Component`Bean。
 
 ```
 由启用了自动配置的列表@WebFluxTest可以在附录中找到。
