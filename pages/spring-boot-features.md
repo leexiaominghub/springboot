@@ -4829,6 +4829,499 @@ Java Management Extensions（JMX，Java 管理扩展）提供了一种监视和�
 ## 45、测试
 
 <a id="boot-features-websockets"></a>
+###40. 测试 (1.4.1.RELEASE)
+
+Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，主要分两个模块：`spring-boot-test`包含核心组件，`spring-boot-test-autoconfigure`为测试提供自动配置。
+
+大多数开发者只需要引用`spring-boot-starter-test` ‘Starter’，它既提供Spring Boot测试模块，也提供JUnit，AssertJ，Hamcrest和很多有用的依赖。
+###40.1 测试作用域依赖
+
+如果使用`spring-boot-starter-test` ‘Starter’（在`test``scope`内），你将发现下列被提供的库：
+
+- [JUnit](http://junit.org/) - 事实上的(de-facto)标准，用于Java应用的单元测试。
+- [Spring Test](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle/#integration-testing.html) & Spring Boot Test  - 对Spring应用的集成测试支持。
+- [AssertJ](http://joel-costigliola.github.io/assertj/) - 一个流式断言库。
+- [Hamcrest](http://hamcrest.org/JavaHamcrest/) - 一个匹配对象的库（也称为约束或前置条件）。
+- [Mockito](http://mockito.org/) - 一个Java模拟框架。
+- [JSONassert](https://github.com/skyscreamer/JSONassert) - 一个针对JSON的断言库。
+- [JsonPath](https://github.com/jayway/JsonPath) - 用于JSON的XPath。
+
+这是写测试用例经常用到的库，如果它们不能满足要求，你可以随意添加其他的依赖。
+###40.2 测试Spring应用
+
+依赖注入主要优势之一就是它能够让你的代码更容易进行单元测试。你只需简单的通过`new`操作符实例化对象，甚至不需要涉及Spring，也可以使用模拟对象替换真正的依赖。
+
+你常常需要在进行单元测试后，开始集成测试（在这个过程中只需要涉及到Spring的`ApplicationContext`）。在执行集成测试时，不需要部署应用或连接到其他基础设施是非常有用的，Spring框架为实现这样的集成测试提供了一个专用的测试模块，通过声明`org.springframework:spring-test`的依赖，或使用`spring-boot-starter-test` ‘Starter’就可以使用它了。
+
+如果以前没有使用过`spring-test`模块，可以查看Spring框架参考文档中的[相关章节](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle/#testing)。
+###40.3 测试Spring Boot应用
+
+Spring Boot应用只是一个Spring `ApplicationContext`，所以在测试时对它只需要像处理普通Spring context那样即可。唯一需要注意的是，如果你使用`SpringApplication`创建上下文，外部配置，日志和Spring Boot的其他特性只会在默认的上下文中起作用。
+
+Spring Boot提供一个`@SpringApplicationConfiguration`注解用于替换标准的`spring-test` `@ContextConfiguration`注解，该组件工作方式是通过`SpringApplication`创建用于测试的`ApplicationContext`。
+
+你可以使用`@SpringBootTest`的`webEnvironment`属性定义怎么运行测试：
+
+* `MOCK` - 加载`WebApplicationContext`，并提供一个mock servlet环境，使用该注解时内嵌servlet容器将不会启动。如果classpath下不存在servlet APIs，该模式将创建一个常规的non-web `ApplicationContext`。
+
+* `RANDOM_PORT` - 加载`EmbeddedWebApplicationContext`，并提供一个真实的servlet环境。使用该模式内嵌容器将启动，并监听在一个随机端口。
+
+* `DEFINED_PORT` - 加载`EmbeddedWebApplicationContext`，并提供一个真实的servlet环境。使用该模式内嵌容器将启动，并监听一个定义好的端口（比如`application.properties`中定义的或默认的`8080`端口）。
+
+* `NONE` - 使用`SpringApplication`加载一个`ApplicationContext`，但不提供任何servlet环境（不管是mock还是其他）。
+
+**注** 不要忘记在测试用例上添加`@RunWith(SpringRunner.class)`，否则该注解将被忽略。
+###40.3.1 发现测试配置
+如果熟悉Spring测试框架，你可能经常通过`@ContextConfiguration(classes=…)`指定加载哪些Spring `@Configuration`，也可能经常在测试类中使用内嵌`@Configuration`类。当测试Spring Boot应用时这些就不需要了，Spring Boot的`@*Test`注解会自动搜索主配置类，即使你没有显式定义它。
+
+搜索算法是从包含测试类的package开始搜索，直到发现`@SpringBootApplication`或`@SpringBootConfiguration`注解的类，只要按[恰当的方式组织代码](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#using-boot-structuring-your-code)，通常都会发现主配置类。
+
+如果想自定义主配置类，你可以使用一个内嵌的`@TestConfiguration`类。不像内嵌的`@Configuration`类（会替换应用主配置类），内嵌的`@TestConfiguration`类是可以跟应用主配置类一块使用的。
+
+**注** Spring测试框架在测试过程中会缓存应用上下文，因此，只要你的测试共享相同的配置（不管是怎么发现的），加载上下文的潜在时间消耗都只会发生一次。
+###40.3.10 自动配置的Spring REST Docs测试
+如果想在测试类中使用Spring REST Docs，你可以使用`@AutoConfigureRestDocs`注解，它会自动配置`MockMvc`去使用Spring REST Docs，并移除对Spring REST Docs的JUnit规则的需要。
+```java
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@RunWith(SpringRunner.class)
+@WebMvcTest(UserController.class)
+@AutoConfigureRestDocs("target/generated-snippets")
+public class UserDocumentationTests {
+
+    @Autowired
+    private MockMvc mvc;
+
+    @Test
+    public void listUsers() throws Exception {
+        this.mvc.perform(get("/users").accept(MediaType.TEXT_PLAIN))
+                .andExpect(status().isOk())
+                .andDo(document("list-users"));
+    }
+
+}
+```
+此外，除了配置输出目录，`@AutoConfigureRestDocs`也能配置将出现在任何文档化的URLs中的部分，比如host，scheme和port等。如果需要控制更多Spring REST Docs的配置，你可以使用`RestDocsMockMvcConfigurationCustomizer` bean：
+```java
+@TestConfiguration
+static class CustomizationConfiguration
+        implements RestDocsMockMvcConfigurationCustomizer {
+
+    @Override
+    public void customize(MockMvcRestDocumentationConfigurer configurer) {
+        configurer.snippets().withTemplateFormat(TemplateFormats.markdown());
+    }
+
+}
+```
+如果想充分利用Spring REST Docs对参数化输出目录的支持，你可以创建一个`RestDocumentationResultHandler` bean，自动配置将使用它调用`alwaysDo`方法，进而促使每个`MockMvc`调用都会自动产生默认片段：
+```java
+@TestConfiguration
+static class ResultHandlerConfiguration {
+
+    @Bean
+    public RestDocumentationResultHandler restDocumentation() {
+        return MockMvcRestDocumentation.document("{method-name}");
+    }
+
+}
+```
+###40.3.11 使用Spock测试Spring Boot应用
+
+如果想使用Spock测试Spring Boot应用，你需要为应用添加Spock的`spock-spring`依赖，该依赖已将Spring测试框架集成进Spock，怎么使用Spock测试Spring Boot应用取决于你使用的Spock版本。
+
+**注** Spring Boot为Spock 1.0提供依赖管理，如果希望使用Spock 1.1，你需要覆盖`build.gradle`或`pom.xml`文件中的`spock.version`属性。
+
+当使用Spock 1.1时，只能使用[上述注解](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#boot-features-testing-spring-boot-applications)，你可以使用`@SpringBootTest`注解你的`Specification`以满足测试需求。
+
+当使用Spock 1.0时，`@SpringBootTest`将不能用于web项目，你需要使用`@SpringApplicationConfiguration`和`@WebIntegrationTest(randomPort = true)`。
+不能使用`@SpringBootTest`也就意味着你失去了自动配置的`TestRestTemplate` bean，不过可以通过以下配置创建一个等价的bean：
+```java
+@Configuration
+static class TestRestTemplateConfiguration {
+
+    @Bean
+    public TestRestTemplate testRestTemplate(
+            ObjectProvider<RestTemplateBuilder> builderProvider,
+            Environment environment) {
+        RestTemplateBuilder builder = builderProvider.getIfAvailable();
+        TestRestTemplate template = builder == null ? new TestRestTemplate()
+                : new TestRestTemplate(builder.build());
+        template.setUriTemplateHandler(new LocalHostUriTemplateHandler(environment));
+        return template;
+    }
+
+}
+```
+###40.3.2 排除测试配置
+如果应用使用组件扫描，比如`@SpringBootApplication`或`@ComponentScan`，你可能发现为测试类创建的组件或配置在任何地方都可能偶然扫描到。为了防止这种情况，Spring Boot提供了`@TestComponent`和`@TestConfiguration`注解，可用在`src/test/java`目录下的类，以暗示它们不应该被扫描。
+
+**注** 只有上层类需要`@TestComponent`和`@TestConfiguration`注解，如果你在测试类（任何有`@Test`方法或`@RunWith`注解的类）中定义`@Configuration`或`@Component`内部类，它们将被自动过滤。
+
+**注** 如果直接使用`@ComponentScan`（比如不通过`@SpringBootApplication`），你需要为它注册`TypeExcludeFilter`，具体参考[Javadoc](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/api/org/springframework/boot/context/TypeExcludeFilter.html)。
+###40.3.3 使用随机端口
+如果你需要为测试启动一个完整运行的服务器，我们建议你使用随机端口。如果你使用`@SpringBootTest(webEnvironment=WebEnvironment.RANDOM_PORT)`，每次运行测试都会为你分配一个可用的随机端口。
+
+`@LocalServerPort`注解用于[注入测试用例实际使用的端口](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#howto-discover-the-http-port-at-runtime)，简单起见，需要发起REST调用到启动服务器的测试可以额外`@Autowire`一个`TestRestTemplate`，它可以解析到运行服务器的相关链接：
+```java
+import org.junit.*;
+import org.junit.runner.*;
+import org.springframework.boot.test.context.web.*;
+import org.springframework.boot.test.web.client.*;
+import org.springframework.test.context.junit4.*;
+
+import static org.assertj.core.api.Assertions.*
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment=WebEnvironment.RANDOM_PORT)
+public class MyWebIntegrationTests {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Test
+    public void exampleTest() {
+        String body = this.restTemplate.getForObject("/", String.class);
+        assertThat(body).isEqualTo("Hello World");
+    }
+
+}
+```
+###40.3.4 模拟和监视beans
+有时候需要在运行测试用例时mock一些组件，例如，你可能需要一些远程服务的门面，但在开发期间不可用。Mocking在模拟真实环境很难复现的失败情况时非常有用。
+
+Spring Boot提供一个`@MockBean`注解，可用于为`ApplicationContext`中的bean定义一个Mockito mock，你可以使用该注解添加新beans，或替换已存在的bean定义。该注解可直接用于测试类，也可用于测试类的字段，或用于`@Configuration`注解的类和字段。当用于字段时，创建mock的实例也会被注入。Mock beans每次调用完测试方法后会自动重置。
+
+下面是一个典型示例，演示使用mock实现替换真实存在的`RemoteService` bean：
+```java
+import org.junit.*;
+import org.junit.runner.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.boot.test.context.*;
+import org.springframework.boot.test.mock.mockito.*;
+import org.springframework.test.context.junit4.*;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class MyTests {
+
+    @MockBean
+    private RemoteService remoteService;
+
+    @Autowired
+    private Reverser reverser;
+
+    @Test
+    public void exampleTest() {
+        // RemoteService has been injected into the reverser bean
+        given(this.remoteService.someCall()).willReturn("mock");
+        String reverse = reverser.reverseSomeCall();
+        assertThat(reverse).isEqualTo("kcom");
+    }
+
+}
+```
+此外，你可以使用`@SpyBean`和Mockito `spy`包装一个已存在的bean，具体参考文档。
+###40.3.5 自动配置测试
+Spring Boot的自动配置系统对应用来说很合适，但用于测试就有点杀鸡用牛刀了，测试时只加载需要的应用片段（slice）通常是有好处的。例如，你可能想测试Spring MVC控制器映射URLs是否正确，且不想在这些测试中涉及到数据库调用；或者你想测试JPA实体，那测试运行时你可能对web层不感兴趣。
+
+`spring-boot-test-autoconfigure`模块包含很多用来自动配置这些片段（slices）的注解，每个工作方式都相似，都是提供一个`@…Test`注解，然后加载`ApplicationContext`，使用一个或多个`@AutoConfigure…`注解自定义设置。
+
+**注** `@AutoConfigure…`注解也可以跟标准的`@SpringBootTest`注解一块使用，如果对应用片段不感兴趣，只是想获取自动配置的一些测试beans，你可以使用该组合。
+###40.3.6 自动配置的JSON测试
+你可以使用`@JsonTest`测试对象JSON序列化和反序列化是否工作正常，该注解将自动配置Jackson `ObjectMapper`，`@JsonComponent`和Jackson `Modules`。如果碰巧使用gson代替Jackson，该注解将配置`Gson`。使用`@AutoConfigureJsonTesters`可以配置auto-configuration的元素。
+
+Spring Boot提供基于AssertJ的帮助类（helpers），可用来配合JSONassert和JsonPath libraries检测JSON是否为期望的，`JacksonHelper`，`GsonHelper`，`BasicJsonTester`分别用于Jackson，Gson，Strings。当使用`@JsonTest`时，你可以在测试类中`@Autowired`任何helper字段：
+```java
+import org.junit.*;
+import org.junit.runner.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.boot.test.autoconfigure.json.*;
+import org.springframework.boot.test.context.*;
+import org.springframework.boot.test.json.*;
+import org.springframework.test.context.junit4.*;
+
+import static org.assertj.core.api.Assertions.*;
+
+@RunWith(SpringRunner.class)
+@JsonTest
+public class MyJsonTests {
+
+    @Autowired
+    private JacksonTester<VehicleDetails> json;
+
+    @Test
+    public void testSerialize() throws Exception {
+        VehicleDetails details = new VehicleDetails("Honda", "Civic");
+        // Assert against a `.json` file in the same package as the test
+        assertThat(this.json.write(details)).isEqualToJson("expected.json");
+        // Or use JSON path based assertions
+        assertThat(this.json.write(details)).hasJsonPathStringValue("@.make");
+        assertThat(this.json.write(details)).extractingJsonPathStringValue("@.make")
+                .isEqualTo("Honda");
+    }
+
+    @Test
+    public void testDeserialize() throws Exception {
+        String content = "{\"make\":\"Ford\",\"model\":\"Focus\"}";
+        assertThat(this.json.parse(content))
+                .isEqualTo(new VehicleDetails("Ford", "Focus"));
+        assertThat(this.json.parseObject(content).getMake()).isEqualTo("Ford");
+    }
+
+}
+```
+**注** JSON帮助类可用于标准单元测试类，如果没有使用`@JsonTest`，你需要在`@Before`方法中调用帮助类的`initFields`方法。
+
+在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@JsonTest`开启的自动配置列表。
+###40.3.7 自动配置的Spring MVC测试
+你可以使用`@WebMvcTest`检测Spring MVC控制器是否工作正常，该注解将自动配置Spring MVC设施，并且只扫描注解`@Controller`，`@ControllerAdvice`，`@JsonComponent`，`Filter`，`WebMvcConfigurer`和`HandlerMethodArgumentResolver`的beans，其他常规的`@Component` beans将不会被扫描。
+
+通常`@WebMvcTest`只限于单个控制器（controller）使用，并结合`@MockBean`以提供需要的协作者（collaborators）的mock实现。`@WebMvcTest`也会自动配置`MockMvc`，Mock MVC为快速测试MVC控制器提供了一种强大的方式，并且不需要启动一个完整的HTTP服务器。
+
+**注** 使用`@AutoConfigureMockMvc`注解一个non-`@WebMvcTest`的类（比如`SpringBootTest`）也可以自动配置`MockMvc`。
+
+```java
+import org.junit.*;
+import org.junit.runner.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.boot.test.autoconfigure.web.servlet.*;
+import org.springframework.boot.test.mock.mockito.*;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@RunWith(SpringRunner.class)
+@WebMvcTest(UserVehicleController.class)
+public class MyControllerTests {
+
+    @Autowired
+    private MockMvc mvc;
+
+    @MockBean
+    private UserVehicleService userVehicleService;
+
+    @Test
+    public void testExample() throws Exception {
+        given(this.userVehicleService.getVehicleDetails("sboot"))
+                .willReturn(new VehicleDetails("Honda", "Civic"));
+        this.mvc.perform(get("/sboot/vehicle").accept(MediaType.TEXT_PLAIN))
+                .andExpect(status().isOk()).andExpect(content().string("Honda Civic"));
+    }
+
+}
+```
+**注** 如果需要定义自定配置（auto-configuration）的元素（比如什么时候使用servlet filters），你可以使用`@AutoConfigureMockMvc`的属性。
+
+如果你使用HtmlUnit或Selenium， 自动配置将提供一个`WebClient` bean和/或`WebDriver` bean，以下是使用HtmlUnit的示例：
+```java
+import com.gargoylesoftware.htmlunit.*;
+import org.junit.*;
+import org.junit.runner.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.boot.test.autoconfigure.web.servlet.*;
+import org.springframework.boot.test.mock.mockito.*;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+
+@RunWith(SpringRunner.class)
+@WebMvcTest(UserVehicleController.class)
+public class MyHtmlUnitTests {
+
+    @Autowired
+    private WebClient webClient;
+
+    @MockBean
+    private UserVehicleService userVehicleService;
+
+    @Test
+    public void testExample() throws Exception {
+        given(this.userVehicleService.getVehicleDetails("sboot"))
+                .willReturn(new VehicleDetails("Honda", "Civic"));
+        HtmlPage page = this.webClient.getPage("/sboot/vehicle.html");
+        assertThat(page.getBody().getTextContent()).isEqualTo("Honda Civic");
+    }
+
+}
+```
+在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@WebMvcTest`开启的自动配置列表。
+###40.3.8 自动配置的Data JPA测试
+你可以使用`@DataJpaTest`测试JPA应用，它默认配置一个内存型的内嵌数据库，扫描`@Entity`类，并配置Spring Data JPA仓库，其他常规的`@Component` beans不会加载进`ApplicationContext`。
+
+Data JPA测试类是事务型的，默认在每个测试结束后回滚，具体查看Spring参考文档的[相关章节](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle#testcontext-tx-enabling-transactions)。如果这不是你想要的结果，可以通过禁用事务管理器来改变：
+```java
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+@RunWith(SpringRunner.class)
+@DataJpaTest
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class ExampleNonTransactionalTests {
+
+}
+```
+Data JPA测试类可能会注入一个专为测试设计的`[TestEntityManager](https://github.com/spring-projects/spring-boot/tree/v1.4.1.RELEASE/spring-boot-test-autoconfigure/src/main/java/org/springframework/boot/test/autoconfigure/orm/jpa/TestEntityManager.java)` bean以替换标准的JPA `EntityManager`。如果想在`@DataJpaTests`外使用`TestEntityManager`，你可以使用`@AutoConfigureTestEntityManager`注解。如果需要，`JdbcTemplate `也是可用的。
+```java
+import org.junit.*;
+import org.junit.runner.*;
+import org.springframework.boot.test.autoconfigure.orm.jpa.*;
+
+import static org.assertj.core.api.Assertions.*;
+
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class ExampleRepositoryTests {
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Autowired
+    private UserRepository repository;
+
+    @Test
+    public void testExample() throws Exception {
+        this.entityManager.persist(new User("sboot", "1234"));
+        User user = this.repository.findByUsername("sboot");
+        assertThat(user.getUsername()).isEqualTo("sboot");
+        assertThat(user.getVin()).isEqualTo("1234");
+    }
+
+}
+```
+对于测试来说，内存型的内嵌数据库通常是足够的，因为它们既快又不需要任何安装。如果比较喜欢在真实数据库上运行测试，你可以使用`@AutoConfigureTestDatabase`注解：
+```java
+@RunWith(SpringRunner.class)
+@DataJpaTest
+@AutoConfigureTestDatabase(replace=Replace.NONE)
+public class ExampleRepositoryTests {
+
+    // ...
+
+}
+```
+在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@DataJpaTest`开启的自动配置列表。
+###40.3.9 自动配置的REST客户端
+你可以使用`@RestClientTest`测试REST客户端，它默认会自动配置Jackson和GSON，配置`RestTemplateBuilder`，并添加`MockRestServiceServer`支持。你需要将`@RestClientTest`的`value`或`components`属性值设置为待测试类：
+```java
+@RunWith(SpringRunner.class)
+@RestClientTest(RemoteVehicleDetailsService.class)
+public class ExampleRestClientTest {
+
+    @Autowired
+    private RemoteVehicleDetailsService service;
+
+    @Autowired
+    private MockRestServiceServer server;
+
+    @Test
+    public void getVehicleDetailsWhenResultIsSuccessShouldReturnDetails()
+            throws Exception {
+        this.server.expect(requestTo("/greet/details"))
+                .andRespond(withSuccess("hello", MediaType.TEXT_PLAIN));
+        String greeting = this.service.callRestService();
+        assertThat(greeting).isEqualTo("hello");
+    }
+
+}
+```
+在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@RestClientTest`启用的自动配置列表。
+### 40.4 测试工具类
+一些测试工具类也打包进了`spring-boot`，在测试时使用它们会有很大帮助。
+###40.4.1 ConfigFileApplicationContextInitializer
+
+`ConfigFileApplicationContextInitializer`是一个`ApplicationContextInitializer`，可在测试类中用于加载Spring Boot的`application.properties`文件。当不需要使用`@SpringBootTest`提供的全部特性时，你可以使用它。
+
+```java
+@ContextConfiguration(classes = Config.class,initializers = ConfigFileApplicationContextInitializer.class)
+```
+**注** 单独使用`ConfigFileApplicationContextInitializer`不会提供`@Value("${…}")`注入支持，它只负责确保`application.properties`文件加载进Spring的`Environment`。为了`@Value`支持，你需要额外配置一个`PropertySourcesPlaceholderConfigurer`或使用`@SpringBootTest`为你自动配置一个。
+###40.4.2 EnvironmentTestUtils
+使用简单的`key=value`字符串调用`EnvironmentTestUtils`就可以快速添加属性到`ConfigurableEnvironment`或`ConfigurableApplicationContext`：
+```java
+EnvironmentTestUtils.addEnvironment(env, "org=Spring", "name=Boot");
+###40.4.3 OutputCapture
+
+`OutputCapture`是JUnit的一个`Rule`，用于捕获`System.out`和`System.err`输出，只需简单的将`@Rule`注解capture，然后在断言中调用`toString()`：
+​```java
+import org.junit.Rule;
+import org.junit.Test;
+import org.springframework.boot.test.OutputCapture;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+public class MyTest {
+@Rule
+public OutputCapture capture = new OutputCapture();
+@Test
+public void testName() throws Exception {
+System.out.println("Hello World!");
+assertThat(capture.toString(), containsString("World"));
+}
+}
+```
+###40.4.4 TestRestTemplate
+在集成测试中,`TestRestTemplate`是Spring `RestTemplate`的便利替代。你可以获取一个普通的或发送基本HTTP认证（使用用户名和密码）的模板，不管哪种情况，
+这些模板都有益于测试：不允许重定向（这样你可以对响应地址进行断言），忽略cookies（这样模板就是无状态的），对于服务端错误不会抛出异常。推荐使用Apache HTTP Client(4.3.2或更高版本)，但不强制这样做，如果相关库在classpath下存在，`TestRestTemplate`将以正确配置的client进行响应。
+```java
+public class MyTest {
+RestTemplate template = new TestRestTemplate();
+@Test
+public void testRequest() throws Exception {
+HttpHeaders headers = template.getForEntity("http://myhost.com", String.class).getHeaders();
+assertThat(headers.getLocation().toString(), containsString("myotherhost"));
+}
+}
+```
+如果正在使用`@SpringBootTest`，且设置了`WebEnvironment.RANDOM_PORT`或`WebEnvironment.DEFINED_PORT`属性，你可以注入一个配置完全的`TestRestTemplate`，并开始使用它。如果有需要，你还可以通过`RestTemplateBuilder` bean进行额外的自定义：
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class MyTest {
+
+	@Autowired
+	private TestRestTemplate template;
+
+	@Test
+	public void testRequest() throws Exception {
+		HttpHeaders headers = template.getForEntity("http://myhost.com", String.class).getHeaders();
+		assertThat(headers.getLocation().toString(), containsString("myotherhost"));
+	}
+
+	@TestConfiguration
+	static class Config {
+
+		@Bean
+		public RestTemplateBuilder restTemplateBuilder() {
+			return new RestTemplateBuilder()
+				.additionalMessageConverters(...)
+				.customizers(...);
+		}
+
+	}
+
+}
+```
 
 ## 46、WebSocket
 
