@@ -4826,9 +4826,9 @@ Java Management Extensions（JMX，Java 管理扩展）提供了一种监视和�
 
 <a id="boot-features-testing"></a>
 
-## 45、测试
+## 25、测试
 
-## 40. 测试 (1.4.1.RELEASE,正在更新到新版本)
+## 25. 测试 (1.4.1.RELEASE,正在更新到2.2.6)
 
 Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，主要分两个模块：`spring-boot-test`包含核心组件，`spring-boot-test-autoconfigure`为测试提供自动配置。
 
@@ -4851,7 +4851,7 @@ The starter also brings the vintage engine so that you can run both JUnit 4 and 
 
 
 
-## 40.1 测试作用域依赖
+## 25.1 测试作用域依赖
 
 如果使用`spring-boot-starter-test` ‘Starter’（在`test``scope`内），你将发现下列被提供的库：
 
@@ -4864,7 +4864,7 @@ The starter also brings the vintage engine so that you can run both JUnit 4 and 
 - [JsonPath](https://github.com/jayway/JsonPath) - 用于JSON的XPath。
 
 这是写测试用例经常用到的库，如果它们不能满足要求，你可以添加其他依赖。
-### 40.2 测试Spring应用
+### 25.2 测试Spring应用
 
 依赖注入的一个主要优势即是它使得测试代码更加容易。你只需简单的通过`new`操作符实例化对象，甚至不需要涉及Spring，也可以使用模拟对象替换真正的依赖。
 
@@ -4873,7 +4873,10 @@ The starter also brings the vintage engine so that you can run both JUnit 4 and 
 Spring框架为实现这样的集成测试提供了一个专用的测试模块，通过声明`org.springframework:spring-test`的依赖，或使用`spring-boot-starter-test` ‘Starter’就可以使用它了。
 
 如果你尚未使用过`spring-test`模块，可以查看Spring框架参考文档中的[相关章节](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle/#testing)。
-### 40.3 测试Spring Boot应用
+
+
+
+### 25.3 测试Spring Boot应用
 
 Spring Boot应用只是一个Spring `ApplicationContext`，所以在测试时对它只需要像处理普通Spring context那样即可。
 
@@ -4905,6 +4908,8 @@ If you are using JUnit 4, don’t forget to also add `@RunWith(SpringRunner.clas
 如果应用使用与管理服务器不同的端口，@SpringBootTest与webEnvironment = WebEnvironment.RANDOM_PORT仍会使用独立的随机端口启动管理服务器。
 ```
 
+
+
 ### 25.3.1. 发现Web应用类型
 
 如果存在Spring MVC，则会配置一个常规的基于MVC应用上下文。如果只有Spring WebFlux，则会一个WebFlux-based应用上下文.
@@ -4918,69 +4923,232 @@ class MyWebFluxTests { ... }
 
 
 
-### 40.3.1 发现测试配置
+### 25.3.2 发现测试配置
 
-如果熟悉Spring测试框架，你可能经常通过`@ContextConfiguration(classes=…)`指定加载哪些Spring `@Configuration`，也可能经常在测试类中使用内嵌`@Configuration`类。当测试Spring Boot应用时这些就不需要了，Spring Boot的`@*Test`注解会自动搜索主配置类，即使你没有显式定义它。
+如果熟悉Spring测试框架，你可能经常通过`@ContextConfiguration(classes=…)`指定加载哪些Spring `@Configuration`，也可能经常在测试类中使用内嵌`@Configuration`类。
 
-搜索算法是从包含测试类的package开始搜索，直到发现`@SpringBootApplication`或`@SpringBootConfiguration`注解的类，只要按[恰当的方式组织代码](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#using-boot-structuring-your-code)，通常都会发现主配置类。
+测试Spring Boot应用通常不需要这些，Spring Boot的`@*Test`注解会自动搜索主配置类，即使你没有显式定义它。
+
+搜索算法是从包含测试类的package开始搜索，直到发现`@SpringBootApplication`或`@SpringBootConfiguration`注解的类，只要按[合理的方式组织代码](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#using-boot-structuring-your-code)，通常都会发现主配置类。
+
+```
+如果你想使用测试注解测试应用的特定部分，则应避免在主方法的应用程序类上添加针对于特定区域的配置设置。
+
+@SpringBootApplication的基础组件扫描配置，定义了排除过滤器，以确保切片按预期工作。如果你在@SpringBootApplication的注解类上显示使用@ComponentScan指令，请注意，这些过滤器将被禁用。
+如果使用切片，则应重新定义它们。
+```
 
 如果想自定义主配置类，你可以使用一个内嵌的`@TestConfiguration`类。不像内嵌的`@Configuration`类（会替换应用主配置类），内嵌的`@TestConfiguration`类是可以跟应用主配置类一块使用的。
 
-**注** Spring测试框架在测试过程中会缓存应用上下文，因此，只要你的测试共享相同的配置（不管是怎么发现的），加载上下文的潜在时间消耗都只会发生一次。
-### 40.3.2 排除测试配置
-如果应用使用组件扫描，比如`@SpringBootApplication`或`@ComponentScan`，你可能发现为测试类创建的组件或配置在任何地方都可能偶然扫描到。为了防止这种情况，Spring Boot提供了`@TestComponent`和`@TestConfiguration`注解，可用在`src/test/java`目录下的类，以暗示它们不应该被扫描。
+```
+Spring的测试框架在测试之间缓存应用程序上下文。 因此，只要您的测试共享相同的配置（无论如何发现），加载上下文的潜在耗时过程就只会发生一次。
+```
 
-**注** 只有上层类需要`@TestComponent`和`@TestConfiguration`注解，如果你在测试类（任何有`@Test`方法或`@RunWith`注解的类）中定义`@Configuration`或`@Component`内部类，它们将被自动过滤。
 
-**注** 如果直接使用`@ComponentScan`（比如不通过`@SpringBootApplication`），你需要为它注册`TypeExcludeFilter`，具体参考[Javadoc](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/api/org/springframework/boot/context/TypeExcludeFilter.html)。
-### 40.3.3 使用随机端口
-如果你需要为测试启动一个完整运行的服务器，我们建议你使用随机端口。如果你使用`@SpringBootTest(webEnvironment=WebEnvironment.RANDOM_PORT)`，每次运行测试都会为你分配一个可用的随机端口。
 
-`@LocalServerPort`注解用于[注入测试用例实际使用的端口](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#howto-discover-the-http-port-at-runtime)，简单起见，需要发起REST调用到启动服务器的测试可以额外`@Autowire`一个`TestRestTemplate`，它可以解析到运行服务器的相关链接：
+### 25.3.3 排除测试配置
+
+如果应用使用组件扫描，比如`@SpringBootApplication`或`@ComponentScan`，你可能会发现仅为特定测试创建的顶级配置类在任何地方都可能偶然扫描到。
+
+如前所述，`@TestConfiguration`可用于测试的某个内部类上，以自定义主要配置。当放置在顶级类上时，`@TestConfiguration`表示不会扫src/test/java中的类。然后，可以在需要的位置显式导入该类，如以下示例所示：
+
 ```java
-import org.junit.*;
-import org.junit.runner.*;
-import org.springframework.boot.test.context.web.*;
-import org.springframework.boot.test.web.client.*;
-import org.springframework.test.context.junit4.*;
-
-import static org.assertj.core.api.Assertions.*
-
-@RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment=WebEnvironment.RANDOM_PORT)
-public class MyWebIntegrationTests {
-
-    @Autowired
-    private TestRestTemplate restTemplate;
+@SpringBootTest
+@Import(MyTestsConfiguration.class)
+class MyTests {
 
     @Test
-    public void exampleTest() {
-        String body = this.restTemplate.getForObject("/", String.class);
+    void exampleTest() {
+        ...
+    }
+
+}
+```
+
+```markdown
+如果直接使用`@ComponentScan`（即不是通过@SpringBootApplication），则需要向其中注册TypeExcludeFilter。有关详细信息，请参见Javadoc。
+```
+
+### 25.3.4. 使用应用程序参数
+
+如果您的应用程序需要参数，则可以使用`@SpringBootTest`的args属性注入参数。
+
+```java
+@SpringBootTest(args = "--app.test=one")
+class ApplicationArgumentsExampleTests {
+
+    @Test
+    void applicationArgumentsPopulated(@Autowired ApplicationArguments args) {
+        assertThat(args.getOptionNames()).containsOnly("app.test");
+        assertThat(args.getOptionValues("app.test")).containsOnly("one");
+    }
+
+}
+```
+
+### 25.3.5. 在模拟环境中进行测试
+
+默认情况下，`@SpringBootTest`不会启动服务器。如果你要在模拟环境中测试的Web端点，则可以另外配置`MockMvc`，如以下示例所示：
+
+```java
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class MockMvcExampleTests {
+
+    @Test
+    void exampleTest(@Autowired MockMvc mvc) throws Exception {
+        mvc.perform(get("/")).andExpect(status().isOk()).andExpect(content().string("Hello World"));
+    }
+
+}
+```
+
+```
+如果您只想关注Web层而不希望启动完整的ApplicationContext，请考虑使用@WebMvcTest。
+```
+
+另外，您可以配置`WebTestClient`，如以下示例所示：
+
+```java
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.reactive.server.WebTestClient;
+
+@SpringBootTest
+@AutoConfigureWebTestClient
+class MockWebTestClientExampleTests {
+
+    @Test
+    void exampleTest(@Autowired WebTestClient webClient) {
+        webClient.get().uri("/").exchange().expectStatus().isOk().expectBody(String.class).isEqualTo("Hello World");
+    }
+
+}
+```
+
+```
+在模拟环境中进行测试通常比在完整的Servlet容器中运行更快。但是，由于模拟发生在Spring MVC层，因此无法使用MockMvc直接测试依赖于较低级别Servlet容器行为的代码。
+例如，Spring Boot的错误处理基于Servlet容器提供的“错误页面”支持。这意味着，尽管您可以按预期测试MVC层引发和处理异常，但是您无法直接测试是否呈现了特定的自定义错误页面。如果需要测试这些较低级别的问题，则可以按照下一节中的说明启动完全运行的服务器。
+```
+
+
+
+### 25.3.6 使用正在运行的服务器进行测试
+
+如果你需要为测试启动一个完整运行的服务器，我们建议你使用随机端口。如果你使用`@SpringBootTest(webEnvironment=WebEnvironment.RANDOM_PORT)`，每次运行测试都会为你分配一个可用的随机端口。
+
+`@LocalServerPort`注解用于[注入测试用例实际使用的端口](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#howto-discover-the-http-port-at-runtime)。简单起见，需要发起REST调用到启动服务器的测试可以额外`@Autowire`一个`TestRestTemplate`，它可以解析到运行服务器的相关链接，并带有用于验证响应的专用API，如下所示：
+
+```java
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.test.web.reactive.server.WebTestClient;
+
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+class RandomPortWebTestClientExampleTests {
+
+    @Test
+    void exampleTest(@Autowired WebTestClient webClient) {
+        webClient.get().uri("/").exchange().expectStatus().isOk().expectBody(String.class).isEqualTo("Hello World");
+    }
+
+}
+```
+这种设置需要在类路径上使用`spring-webflux`。如果您无法或不会添加webflux，Spring Boot还提供了`TestRestTemplate`工具：
+
+```java
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+class RandomPortTestRestTemplateExampleTests {
+
+    @Test
+    void exampleTest(@Autowired TestRestTemplate restTemplate) {
+        String body = restTemplate.getForObject("/", String.class);
         assertThat(body).isEqualTo("Hello World");
     }
 
 }
 ```
-### 40.3.4 模拟和监视beans
-有时候需要在运行测试用例时mock一些组件，例如，你可能需要一些远程服务的门面，但在开发期间不可用。Mocking在模拟真实环境很难复现的失败情况时非常有用。
 
-Spring Boot提供一个`@MockBean`注解，可用于为`ApplicationContext`中的bean定义一个Mockito mock，你可以使用该注解添加新beans，或替换已存在的bean定义。该注解可直接用于测试类，也可用于测试类的字段，或用于`@Configuration`注解的类和字段。当用于字段时，创建mock的实例也会被注入。Mock beans每次调用完测试方法后会自动重置。
+### 25.3.7 自定义WebTestClient
+
+要定制`WebTestClient` bean，请配置一个`WebTestClientBuilderCustomizer` bean。创建`WebTestClient`的`WebTestClient.Builder`会调用所有此类bean。
+
+
+
+### 25.3.8 使用JMX
+
+由于测试上下文框架缓存上下文，因此默认情况下禁用JMX以防止相同组件在同一域上注册。如果此类测试需要访问`MBeanServer`，请考虑将其标记为脏：
+
+```java
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(properties = "spring.jmx.enabled=true")
+@DirtiesContext
+class SampleJmxTests {
+
+    @Autowired
+    private MBeanServer mBeanServer;
+
+    @Test
+    void exampleTest() {
+        // ...
+    }
+
+}
+```
+
+
+
+### 25.3.9 模拟和监视beans
+
+有时候需要在运行测试用例时在应用上下文中模拟一些组件，例如，你可能需要一些远程服务的门面，但在开发期间不可用。Mocking在模拟真实环境很难复现的失败情况时非常有用。
+
+Spring Boot提供一个`@MockBean`注解，可用于为`ApplicationContext`中的bean定义一个Mockito mock。你可以使用该注解添加新beans，或替换已存在的bean定义。该注解可直接用于测试类，也可用于测试类的字段，或用于`@Configuration`注解的类和字段。当用于字段时，创建mock的实例也会被注入。Mock beans每次调用完测试方法后会自动重置。
+
+```java
+如果您的测试使用Spring Boot的测试注释之一（例如@SpringBootTest），则会自动启用此功能。要以其他方式使用此功能，必须明确添加侦听器，如以下示例所示：
+@TestExecutionListeners(MockitoTestExecutionListener.class)
+```
+
+
 
 下面是一个典型示例，演示使用mock实现替换真实存在的`RemoteService` bean：
 ```java
-import org.junit.*;
-import org.junit.runner.*;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.boot.test.context.*;
 import org.springframework.boot.test.mock.mockito.*;
-import org.springframework.test.context.junit4.*;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
-public class MyTests {
+class MyTests {
 
     @MockBean
     private RemoteService remoteService;
@@ -4989,7 +5157,7 @@ public class MyTests {
     private Reverser reverser;
 
     @Test
-    public void exampleTest() {
+    void exampleTest() {
         // RemoteService has been injected into the reverser bean
         given(this.remoteService.someCall()).willReturn("mock");
         String reverse = reverser.reverseSomeCall();
@@ -4998,13 +5166,45 @@ public class MyTests {
 
 }
 ```
+```
+@MockBean不能用于模拟应用程序上下文刷新期间执行的bean的行为。在执行测试时，应用程序上下文刷新已完成，并且配置模拟行为为时已晚。我们建议在这种情况下使用@Bean方法创建和配置模拟。
+```
+
 此外，你可以使用`@SpyBean`和Mockito `spy`包装一个已存在的bean，具体参考文档。
-### 40.3.5 自动配置测试
+
+```
+CGLib代理（例如为范围内的Bean创建的代理）将代理方法声明为final。这将阻止Mockito正常运行，因为它无法在其默认配置中模拟或监视最终方法。如果要模拟或监视这样的Bean，请通过将org.mockito：mockito-inline添加到应用程序的测试依赖项中，将Mockito配置为使用其内联模拟生成器。这允许Mockito模拟和监视最终方法。
+```
+
+```
+Spring的测试框架在测试之间缓存应用程序上下文，并为共享相同配置的测试重用上下文，而@MockBean或@SpyBean的使用会影响缓存键，这很可能会增加上下文数量。
+```
+
+```
+如果您使用@SpyBean通过@Cacheable方法监视一个按名称命名参数的bean，则必须使用-parameters编译您的应用程序。这样可以确保在侦听Bean后即可将参数名称用于缓存基础结构。
+```
+
+
+
+### 25.3.10 自动配置测试
 Spring Boot的自动配置系统对应用来说很合适，但用于测试就有点杀鸡用牛刀了，测试时只加载需要的应用片段（slice）通常是有好处的。例如，你可能想测试Spring MVC控制器映射URLs是否正确，且不想在这些测试中涉及到数据库调用；或者你想测试JPA实体，那测试运行时你可能对web层不感兴趣。
 
 `spring-boot-test-autoconfigure`模块包含很多用来自动配置这些片段（slices）的注解，每个工作方式都相似，都是提供一个`@…Test`注解，然后加载`ApplicationContext`，使用一个或多个`@AutoConfigure…`注解自定义设置。
 
+```markdown
+每个切片将组件扫描限制为适当的组件，并加载一组非常受限制的自动配置类。如果您需要排除其中之一，则大多数@ ... Test注释都提供了excludeAutoConfiguration属性。或者，您可以使用@ ImportAutoConfiguration＃exclude。
+```
+
+```markdown
+不支持在一个测试中使用多个@…Test批注来包含多个“片段”。如果您需要多个``切片''，请选择@ ... Test批注之一，并手动添加其他``切片''的@AutoConfigure ...``批注。
+```
+
+```markdown
 **注** `@AutoConfigure…`注解也可以跟标准的`@SpringBootTest`注解一块使用，如果对应用片段不感兴趣，只是想获取自动配置的一些测试beans，你可以使用该组合。
+```
+
+
+
 ### 40.3.6 自动配置的JSON测试
 你可以使用`@JsonTest`测试对象JSON序列化和反序列化是否工作正常，该注解将自动配置Jackson `ObjectMapper`，`@JsonComponent`和Jackson `Modules`。如果碰巧使用gson代替Jackson，该注解将配置`Gson`。使用`@AutoConfigureJsonTesters`可以配置auto-configuration的元素。
 
