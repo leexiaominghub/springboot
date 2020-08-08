@@ -4829,12 +4829,12 @@ Java Management Extensions（JMX，Java 管理扩展）提供了一种监视和�
 ## 45、测试
 
 <a id="boot-features-websockets"></a>
-###40. 测试 (1.4.1.RELEASE)
+##40. 测试 (1.4.1.RELEASE)
 
 Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，主要分两个模块：`spring-boot-test`包含核心组件，`spring-boot-test-autoconfigure`为测试提供自动配置。
 
 大多数开发者只需要引用`spring-boot-starter-test` ‘Starter’，它既提供Spring Boot测试模块，也提供JUnit，AssertJ，Hamcrest和很多有用的依赖。
-###40.1 测试作用域依赖
+##40.1 测试作用域依赖
 
 如果使用`spring-boot-starter-test` ‘Starter’（在`test``scope`内），你将发现下列被提供的库：
 
