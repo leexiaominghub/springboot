@@ -4833,7 +4833,7 @@ Java Management Extensions（JMX，Java 管理扩展）提供了一种监视和�
 Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，主要分两个模块：`spring-boot-test`包含核心组件，`spring-boot-test-autoconfigure`为测试提供自动配置。
 
 大多数开发者只需要引用`spring-boot-starter-test` ‘Starter’，它既提供Spring Boot测试模块，也提供JUnit，AssertJ，Hamcrest和很多有用的依赖。
-##40.1 测试作用域依赖
+## 40.1 测试作用域依赖
 
 如果使用`spring-boot-starter-test` ‘Starter’（在`test``scope`内），你将发现下列被提供的库：
 
@@ -4846,14 +4846,14 @@ Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，
 - [JsonPath](https://github.com/jayway/JsonPath) - 用于JSON的XPath。
 
 这是写测试用例经常用到的库，如果它们不能满足要求，你可以随意添加其他的依赖。
-###40.2 测试Spring应用
+### 40.2 测试Spring应用
 
 依赖注入主要优势之一就是它能够让你的代码更容易进行单元测试。你只需简单的通过`new`操作符实例化对象，甚至不需要涉及Spring，也可以使用模拟对象替换真正的依赖。
 
 你常常需要在进行单元测试后，开始集成测试（在这个过程中只需要涉及到Spring的`ApplicationContext`）。在执行集成测试时，不需要部署应用或连接到其他基础设施是非常有用的，Spring框架为实现这样的集成测试提供了一个专用的测试模块，通过声明`org.springframework:spring-test`的依赖，或使用`spring-boot-starter-test` ‘Starter’就可以使用它了。
 
 如果以前没有使用过`spring-test`模块，可以查看Spring框架参考文档中的[相关章节](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle/#testing)。
-###40.3 测试Spring Boot应用
+### 40.3 测试Spring Boot应用
 
 Spring Boot应用只是一个Spring `ApplicationContext`，所以在测试时对它只需要像处理普通Spring context那样即可。唯一需要注意的是，如果你使用`SpringApplication`创建上下文，外部配置，日志和Spring Boot的其他特性只会在默认的上下文中起作用。
 
@@ -4870,7 +4870,7 @@ Spring Boot提供一个`@SpringApplicationConfiguration`注解用于替换标准
 * `NONE` - 使用`SpringApplication`加载一个`ApplicationContext`，但不提供任何servlet环境（不管是mock还是其他）。
 
 **注** 不要忘记在测试用例上添加`@RunWith(SpringRunner.class)`，否则该注解将被忽略。
-###40.3.1 发现测试配置
+### 40.3.1 发现测试配置
 如果熟悉Spring测试框架，你可能经常通过`@ContextConfiguration(classes=…)`指定加载哪些Spring `@Configuration`，也可能经常在测试类中使用内嵌`@Configuration`类。当测试Spring Boot应用时这些就不需要了，Spring Boot的`@*Test`注解会自动搜索主配置类，即使你没有显式定义它。
 
 搜索算法是从包含测试类的package开始搜索，直到发现`@SpringBootApplication`或`@SpringBootConfiguration`注解的类，只要按[恰当的方式组织代码](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#using-boot-structuring-your-code)，通常都会发现主配置类。
@@ -4878,7 +4878,7 @@ Spring Boot提供一个`@SpringApplicationConfiguration`注解用于替换标准
 如果想自定义主配置类，你可以使用一个内嵌的`@TestConfiguration`类。不像内嵌的`@Configuration`类（会替换应用主配置类），内嵌的`@TestConfiguration`类是可以跟应用主配置类一块使用的。
 
 **注** Spring测试框架在测试过程中会缓存应用上下文，因此，只要你的测试共享相同的配置（不管是怎么发现的），加载上下文的潜在时间消耗都只会发生一次。
-###40.3.10 自动配置的Spring REST Docs测试
+### 40.3.10 自动配置的Spring REST Docs测试
 如果想在测试类中使用Spring REST Docs，你可以使用`@AutoConfigureRestDocs`注解，它会自动配置`MockMvc`去使用Spring REST Docs，并移除对Spring REST Docs的JUnit规则的需要。
 ```java
 import org.junit.Test;
@@ -4936,7 +4936,7 @@ static class ResultHandlerConfiguration {
 
 }
 ```
-###40.3.11 使用Spock测试Spring Boot应用
+### 40.3.11 使用Spock测试Spring Boot应用
 
 如果想使用Spock测试Spring Boot应用，你需要为应用添加Spock的`spock-spring`依赖，该依赖已将Spring测试框架集成进Spock，怎么使用Spock测试Spring Boot应用取决于你使用的Spock版本。
 
@@ -4963,13 +4963,13 @@ static class TestRestTemplateConfiguration {
 
 }
 ```
-###40.3.2 排除测试配置
+### 40.3.2 排除测试配置
 如果应用使用组件扫描，比如`@SpringBootApplication`或`@ComponentScan`，你可能发现为测试类创建的组件或配置在任何地方都可能偶然扫描到。为了防止这种情况，Spring Boot提供了`@TestComponent`和`@TestConfiguration`注解，可用在`src/test/java`目录下的类，以暗示它们不应该被扫描。
 
 **注** 只有上层类需要`@TestComponent`和`@TestConfiguration`注解，如果你在测试类（任何有`@Test`方法或`@RunWith`注解的类）中定义`@Configuration`或`@Component`内部类，它们将被自动过滤。
 
 **注** 如果直接使用`@ComponentScan`（比如不通过`@SpringBootApplication`），你需要为它注册`TypeExcludeFilter`，具体参考[Javadoc](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/api/org/springframework/boot/context/TypeExcludeFilter.html)。
-###40.3.3 使用随机端口
+### 40.3.3 使用随机端口
 如果你需要为测试启动一个完整运行的服务器，我们建议你使用随机端口。如果你使用`@SpringBootTest(webEnvironment=WebEnvironment.RANDOM_PORT)`，每次运行测试都会为你分配一个可用的随机端口。
 
 `@LocalServerPort`注解用于[注入测试用例实际使用的端口](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#howto-discover-the-http-port-at-runtime)，简单起见，需要发起REST调用到启动服务器的测试可以额外`@Autowire`一个`TestRestTemplate`，它可以解析到运行服务器的相关链接：
@@ -4997,7 +4997,7 @@ public class MyWebIntegrationTests {
 
 }
 ```
-###40.3.4 模拟和监视beans
+### 40.3.4 模拟和监视beans
 有时候需要在运行测试用例时mock一些组件，例如，你可能需要一些远程服务的门面，但在开发期间不可用。Mocking在模拟真实环境很难复现的失败情况时非常有用。
 
 Spring Boot提供一个`@MockBean`注解，可用于为`ApplicationContext`中的bean定义一个Mockito mock，你可以使用该注解添加新beans，或替换已存在的bean定义。该注解可直接用于测试类，也可用于测试类的字段，或用于`@Configuration`注解的类和字段。当用于字段时，创建mock的实例也会被注入。Mock beans每次调用完测试方法后会自动重置。
@@ -5035,13 +5035,13 @@ public class MyTests {
 }
 ```
 此外，你可以使用`@SpyBean`和Mockito `spy`包装一个已存在的bean，具体参考文档。
-###40.3.5 自动配置测试
+### 40.3.5 自动配置测试
 Spring Boot的自动配置系统对应用来说很合适，但用于测试就有点杀鸡用牛刀了，测试时只加载需要的应用片段（slice）通常是有好处的。例如，你可能想测试Spring MVC控制器映射URLs是否正确，且不想在这些测试中涉及到数据库调用；或者你想测试JPA实体，那测试运行时你可能对web层不感兴趣。
 
 `spring-boot-test-autoconfigure`模块包含很多用来自动配置这些片段（slices）的注解，每个工作方式都相似，都是提供一个`@…Test`注解，然后加载`ApplicationContext`，使用一个或多个`@AutoConfigure…`注解自定义设置。
 
 **注** `@AutoConfigure…`注解也可以跟标准的`@SpringBootTest`注解一块使用，如果对应用片段不感兴趣，只是想获取自动配置的一些测试beans，你可以使用该组合。
-###40.3.6 自动配置的JSON测试
+### 40.3.6 自动配置的JSON测试
 你可以使用`@JsonTest`测试对象JSON序列化和反序列化是否工作正常，该注解将自动配置Jackson `ObjectMapper`，`@JsonComponent`和Jackson `Modules`。如果碰巧使用gson代替Jackson，该注解将配置`Gson`。使用`@AutoConfigureJsonTesters`可以配置auto-configuration的元素。
 
 Spring Boot提供基于AssertJ的帮助类（helpers），可用来配合JSONassert和JsonPath libraries检测JSON是否为期望的，`JacksonHelper`，`GsonHelper`，`BasicJsonTester`分别用于Jackson，Gson，Strings。当使用`@JsonTest`时，你可以在测试类中`@Autowired`任何helper字段：
@@ -5087,7 +5087,7 @@ public class MyJsonTests {
 **注** JSON帮助类可用于标准单元测试类，如果没有使用`@JsonTest`，你需要在`@Before`方法中调用帮助类的`initFields`方法。
 
 在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@JsonTest`开启的自动配置列表。
-###40.3.7 自动配置的Spring MVC测试
+### 40.3.7 自动配置的Spring MVC测试
 你可以使用`@WebMvcTest`检测Spring MVC控制器是否工作正常，该注解将自动配置Spring MVC设施，并且只扫描注解`@Controller`，`@ControllerAdvice`，`@JsonComponent`，`Filter`，`WebMvcConfigurer`和`HandlerMethodArgumentResolver`的beans，其他常规的`@Component` beans将不会被扫描。
 
 通常`@WebMvcTest`只限于单个控制器（controller）使用，并结合`@MockBean`以提供需要的协作者（collaborators）的mock实现。`@WebMvcTest`也会自动配置`MockMvc`，Mock MVC为快速测试MVC控制器提供了一种强大的方式，并且不需要启动一个完整的HTTP服务器。
@@ -5161,7 +5161,7 @@ public class MyHtmlUnitTests {
 }
 ```
 在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@WebMvcTest`开启的自动配置列表。
-###40.3.8 自动配置的Data JPA测试
+### 40.3.8 自动配置的Data JPA测试
 你可以使用`@DataJpaTest`测试JPA应用，它默认配置一个内存型的内嵌数据库，扫描`@Entity`类，并配置Spring Data JPA仓库，其他常规的`@Component` beans不会加载进`ApplicationContext`。
 
 Data JPA测试类是事务型的，默认在每个测试结束后回滚，具体查看Spring参考文档的[相关章节](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle#testcontext-tx-enabling-transactions)。如果这不是你想要的结果，可以通过禁用事务管理器来改变：
@@ -5220,7 +5220,7 @@ public class ExampleRepositoryTests {
 }
 ```
 在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@DataJpaTest`开启的自动配置列表。
-###40.3.9 自动配置的REST客户端
+### 40.3.9 自动配置的REST客户端
 你可以使用`@RestClientTest`测试REST客户端，它默认会自动配置Jackson和GSON，配置`RestTemplateBuilder`，并添加`MockRestServiceServer`支持。你需要将`@RestClientTest`的`value`或`components`属性值设置为待测试类：
 ```java
 @RunWith(SpringRunner.class)
@@ -5247,7 +5247,7 @@ public class ExampleRestClientTest {
 在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@RestClientTest`启用的自动配置列表。
 ### 40.4 测试工具类
 一些测试工具类也打包进了`spring-boot`，在测试时使用它们会有很大帮助。
-###40.4.1 ConfigFileApplicationContextInitializer
+### 40.4.1 ConfigFileApplicationContextInitializer
 
 `ConfigFileApplicationContextInitializer`是一个`ApplicationContextInitializer`，可在测试类中用于加载Spring Boot的`application.properties`文件。当不需要使用`@SpringBootTest`提供的全部特性时，你可以使用它。
 
@@ -5255,11 +5255,11 @@ public class ExampleRestClientTest {
 @ContextConfiguration(classes = Config.class,initializers = ConfigFileApplicationContextInitializer.class)
 ```
 **注** 单独使用`ConfigFileApplicationContextInitializer`不会提供`@Value("${…}")`注入支持，它只负责确保`application.properties`文件加载进Spring的`Environment`。为了`@Value`支持，你需要额外配置一个`PropertySourcesPlaceholderConfigurer`或使用`@SpringBootTest`为你自动配置一个。
-###40.4.2 EnvironmentTestUtils
+### 40.4.2 EnvironmentTestUtils
 使用简单的`key=value`字符串调用`EnvironmentTestUtils`就可以快速添加属性到`ConfigurableEnvironment`或`ConfigurableApplicationContext`：
 ```java
 EnvironmentTestUtils.addEnvironment(env, "org=Spring", "name=Boot");
-###40.4.3 OutputCapture
+### 40.4.3 OutputCapture
 
 `OutputCapture`是JUnit的一个`Rule`，用于捕获`System.out`和`System.err`输出，只需简单的将`@Rule`注解capture，然后在断言中调用`toString()`：
 ​```java
@@ -5279,7 +5279,7 @@ assertThat(capture.toString(), containsString("World"));
 }
 }
 ```
-###40.4.4 TestRestTemplate
+### 40.4.4 TestRestTemplate
 在集成测试中,`TestRestTemplate`是Spring `RestTemplate`的便利替代。你可以获取一个普通的或发送基本HTTP认证（使用用户名和密码）的模板，不管哪种情况，
 这些模板都有益于测试：不允许重定向（这样你可以对响应地址进行断言），忽略cookies（这样模板就是无状态的），对于服务端错误不会抛出异常。推荐使用Apache HTTP Client(4.3.2或更高版本)，但不强制这样做，如果相关库在classpath下存在，`TestRestTemplate`将以正确配置的client进行响应。
 ```java
