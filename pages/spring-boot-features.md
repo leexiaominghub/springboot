@@ -4834,7 +4834,7 @@ Spring Boot提供很多有用的工具类和注解用于帮助你测试应用，
 
 大多数开发者只需要引用`spring-boot-starter-test` ‘Starter’，它既提供Spring Boot测试模块，也提供JUnit，AssertJ，Hamcrest和很多有用的依赖。
 
-```xm
+```xml
 The starter also brings the vintage engine so that you can run both JUnit 4 and JUnit 5 tests. If you have migrated your tests to JUnit 5, you should exclude JUnit 4 support, as shown in the following example:
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -4868,27 +4868,58 @@ The starter also brings the vintage engine so that you can run both JUnit 4 and 
 
 依赖注入的一个主要优势即是它使得测试代码更加容易。你只需简单的通过`new`操作符实例化对象，甚至不需要涉及Spring，也可以使用模拟对象替换真正的依赖。
 
-你常常需要在进行单元测试后，开始集成测试（在这个过程中只需要涉及到Spring的`ApplicationContext`）。在执行集成测试时，不需要部署应用或连接到其他基础设施是非常有用的，Spring框架为实现这样的集成测试提供了一个专用的测试模块，通过声明`org.springframework:spring-test`的依赖，或使用`spring-boot-starter-test` ‘Starter’就可以使用它了。
+你常常需要在进行单元测试后，开始集成测试（在这个过程中只需要涉及到Spring的`ApplicationContext`）。在执行集成测试时，不需要部署应用或连接到其他基础设施是非常有用的。
 
-如果以前没有使用过`spring-test`模块，可以查看Spring框架参考文档中的[相关章节](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle/#testing)。
+Spring框架为实现这样的集成测试提供了一个专用的测试模块，通过声明`org.springframework:spring-test`的依赖，或使用`spring-boot-starter-test` ‘Starter’就可以使用它了。
+
+如果你尚未使用过`spring-test`模块，可以查看Spring框架参考文档中的[相关章节](http://docs.spring.io/spring/docs/4.3.3.RELEASE/spring-framework-reference/htmlsingle/#testing)。
 ### 40.3 测试Spring Boot应用
 
-Spring Boot应用只是一个Spring `ApplicationContext`，所以在测试时对它只需要像处理普通Spring context那样即可。唯一需要注意的是，如果你使用`SpringApplication`创建上下文，外部配置，日志和Spring Boot的其他特性只会在默认的上下文中起作用。
+Spring Boot应用只是一个Spring `ApplicationContext`，所以在测试时对它只需要像处理普通Spring context那样即可。
 
-Spring Boot提供一个`@SpringApplicationConfiguration`注解用于替换标准的`spring-test` `@ContextConfiguration`注解，该组件工作方式是通过`SpringApplication`创建用于测试的`ApplicationContext`。
+```markdown
+唯一需要注意的是，如果你使用`SpringApplication`创建上下文，外部配置，日志和Spring Boot的其他特性只会在默认的上下文中起作用。
+```
 
-你可以使用`@SpringBootTest`的`webEnvironment`属性定义怎么运行测试：
+在使用Spring Boot特性时，Spring Boot提供一个`@SpringBootTest`注解用于替换标准的`spring-test` `@ContextConfiguration`注解。该注解的工作方式是通过`SpringApplication`创建用于测试的`ApplicationContext`。还有很多其他注解用于测试应用的特定片段。
 
-* `MOCK` - 加载`WebApplicationContext`，并提供一个mock servlet环境，使用该注解时内嵌servlet容器将不会启动。如果classpath下不存在servlet APIs，该模式将创建一个常规的non-web `ApplicationContext`。
+```markdown
+If you are using JUnit 4, don’t forget to also add `@RunWith(SpringRunner.class)` to your test, otherwise the annotations will be ignored. If you are using JUnit 5, there’s no need to add the equivalent `@ExtendWith(SpringExtension.class)` as `@SpringBootTest` and the other `@…Test` annotations are already annotated with it.
+```
 
-* `RANDOM_PORT` - 加载`EmbeddedWebApplicationContext`，并提供一个真实的servlet环境。使用该模式内嵌容器将启动，并监听在一个随机端口。
+默认情况下`@SpringBootTest`不会启动服务器。你可以使用`@SpringBootTest`的`webEnvironment`属性定义如何运行测试：
 
-* `DEFINED_PORT` - 加载`EmbeddedWebApplicationContext`，并提供一个真实的servlet环境。使用该模式内嵌容器将启动，并监听一个定义好的端口（比如`application.properties`中定义的或默认的`8080`端口）。
+* `MOCK` (默认)：加载web`ApplicationContext`，并提供一个模拟web环境。使用该注解时内嵌servlet容器将不会启动。如果classpath下不存在web环境，该模式将创建一个常规的非web `ApplicationContext`。此属性结合 [`@AutoConfigureMockMvc` 或 `@AutoConfigureWebTestClient`](https://docs.spring.io/spring-boot/docs/2.2.6.RELEASE/reference/html/spring-boot-features.html#boot-features-testing-spring-boot-applications-testing-with-mock-environment) 可用来对web应用进行基于mork的测试。
+
+* `RANDOM_PORT` - 加载`WebServerApplicationContext`，并提供一个真实的web环境。使用该模式内嵌容器将启动，并监听在一个随机端口。
+
+* `DEFINED_PORT` - 加载`WebServerApplicationContextt`，并提供一个真实的servlet环境。使用该模式内嵌容器将启动，并监听一个定义好的端口（比如`application.properties`中定义的）或默认的`8080`端口。
 
 * `NONE` - 使用`SpringApplication`加载一个`ApplicationContext`，但不提供任何servlet环境（不管是mock还是其他）。
 
-**注** 不要忘记在测试用例上添加`@RunWith(SpringRunner.class)`，否则该注解将被忽略。
+```
+如果测试是@Transactional，默认情况下测试结尾会回滚事务。然而，在使用RANDOM_PORT或DEFINED_PORT时，在隐式提供的servlet环境下，HTTP客户端和服务器运行在独立的线程内，因此也在独立的事物中。这种情况下服务器初始化的所有事务不会回滚。
+```
+
+```
+如果应用使用与管理服务器不同的端口，@SpringBootTest与webEnvironment = WebEnvironment.RANDOM_PORT仍会使用独立的随机端口启动管理服务器。
+```
+
+### 25.3.1. 发现Web应用类型
+
+如果存在Spring MVC，则会配置一个常规的基于MVC应用上下文。如果只有Spring WebFlux，则会一个WebFlux-based应用上下文.
+
+如果上述两个都存在，Spring MVC优先。如果你要在此场景中测试交互式web应用，你必须配置 `spring.main.web-application-type`属性：
+
+```java
+@SpringBootTest(properties = "spring.main.web-application-type=reactive")
+class MyWebFluxTests { ... }
+```
+
+
+
 ### 40.3.1 发现测试配置
+
 如果熟悉Spring测试框架，你可能经常通过`@ContextConfiguration(classes=…)`指定加载哪些Spring `@Configuration`，也可能经常在测试类中使用内嵌`@Configuration`类。当测试Spring Boot应用时这些就不需要了，Spring Boot的`@*Test`注解会自动搜索主配置类，即使你没有显式定义它。
 
 搜索算法是从包含测试类的package开始搜索，直到发现`@SpringBootApplication`或`@SpringBootConfiguration`注解的类，只要按[恰当的方式组织代码](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#using-boot-structuring-your-code)，通常都会发现主配置类。
@@ -4896,91 +4927,6 @@ Spring Boot提供一个`@SpringApplicationConfiguration`注解用于替换标准
 如果想自定义主配置类，你可以使用一个内嵌的`@TestConfiguration`类。不像内嵌的`@Configuration`类（会替换应用主配置类），内嵌的`@TestConfiguration`类是可以跟应用主配置类一块使用的。
 
 **注** Spring测试框架在测试过程中会缓存应用上下文，因此，只要你的测试共享相同的配置（不管是怎么发现的），加载上下文的潜在时间消耗都只会发生一次。
-### 40.3.10 自动配置的Spring REST Docs测试
-如果想在测试类中使用Spring REST Docs，你可以使用`@AutoConfigureRestDocs`注解，它会自动配置`MockMvc`去使用Spring REST Docs，并移除对Spring REST Docs的JUnit规则的需要。
-```java
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-@RunWith(SpringRunner.class)
-@WebMvcTest(UserController.class)
-@AutoConfigureRestDocs("target/generated-snippets")
-public class UserDocumentationTests {
-
-    @Autowired
-    private MockMvc mvc;
-
-    @Test
-    public void listUsers() throws Exception {
-        this.mvc.perform(get("/users").accept(MediaType.TEXT_PLAIN))
-                .andExpect(status().isOk())
-                .andDo(document("list-users"));
-    }
-
-}
-```
-此外，除了配置输出目录，`@AutoConfigureRestDocs`也能配置将出现在任何文档化的URLs中的部分，比如host，scheme和port等。如果需要控制更多Spring REST Docs的配置，你可以使用`RestDocsMockMvcConfigurationCustomizer` bean：
-```java
-@TestConfiguration
-static class CustomizationConfiguration
-        implements RestDocsMockMvcConfigurationCustomizer {
-
-    @Override
-    public void customize(MockMvcRestDocumentationConfigurer configurer) {
-        configurer.snippets().withTemplateFormat(TemplateFormats.markdown());
-    }
-
-}
-```
-如果想充分利用Spring REST Docs对参数化输出目录的支持，你可以创建一个`RestDocumentationResultHandler` bean，自动配置将使用它调用`alwaysDo`方法，进而促使每个`MockMvc`调用都会自动产生默认片段：
-```java
-@TestConfiguration
-static class ResultHandlerConfiguration {
-
-    @Bean
-    public RestDocumentationResultHandler restDocumentation() {
-        return MockMvcRestDocumentation.document("{method-name}");
-    }
-
-}
-```
-### 40.3.11 使用Spock测试Spring Boot应用
-
-如果想使用Spock测试Spring Boot应用，你需要为应用添加Spock的`spock-spring`依赖，该依赖已将Spring测试框架集成进Spock，怎么使用Spock测试Spring Boot应用取决于你使用的Spock版本。
-
-**注** Spring Boot为Spock 1.0提供依赖管理，如果希望使用Spock 1.1，你需要覆盖`build.gradle`或`pom.xml`文件中的`spock.version`属性。
-
-当使用Spock 1.1时，只能使用[上述注解](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#boot-features-testing-spring-boot-applications)，你可以使用`@SpringBootTest`注解你的`Specification`以满足测试需求。
-
-当使用Spock 1.0时，`@SpringBootTest`将不能用于web项目，你需要使用`@SpringApplicationConfiguration`和`@WebIntegrationTest(randomPort = true)`。
-不能使用`@SpringBootTest`也就意味着你失去了自动配置的`TestRestTemplate` bean，不过可以通过以下配置创建一个等价的bean：
-```java
-@Configuration
-static class TestRestTemplateConfiguration {
-
-    @Bean
-    public TestRestTemplate testRestTemplate(
-            ObjectProvider<RestTemplateBuilder> builderProvider,
-            Environment environment) {
-        RestTemplateBuilder builder = builderProvider.getIfAvailable();
-        TestRestTemplate template = builder == null ? new TestRestTemplate()
-                : new TestRestTemplate(builder.build());
-        template.setUriTemplateHandler(new LocalHostUriTemplateHandler(environment));
-        return template;
-    }
-
-}
-```
 ### 40.3.2 排除测试配置
 如果应用使用组件扫描，比如`@SpringBootApplication`或`@ComponentScan`，你可能发现为测试类创建的组件或配置在任何地方都可能偶然扫描到。为了防止这种情况，Spring Boot提供了`@TestComponent`和`@TestConfiguration`注解，可用在`src/test/java`目录下的类，以暗示它们不应该被扫描。
 
@@ -5263,6 +5209,91 @@ public class ExampleRestClientTest {
 }
 ```
 在[附录](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#test-auto-configuration)中可以查看`@RestClientTest`启用的自动配置列表。
+### 40.3.10 自动配置的Spring REST Docs测试
+如果想在测试类中使用Spring REST Docs，你可以使用`@AutoConfigureRestDocs`注解，它会自动配置`MockMvc`去使用Spring REST Docs，并移除对Spring REST Docs的JUnit规则的需要。
+```java
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@RunWith(SpringRunner.class)
+@WebMvcTest(UserController.class)
+@AutoConfigureRestDocs("target/generated-snippets")
+public class UserDocumentationTests {
+
+    @Autowired
+    private MockMvc mvc;
+
+    @Test
+    public void listUsers() throws Exception {
+        this.mvc.perform(get("/users").accept(MediaType.TEXT_PLAIN))
+                .andExpect(status().isOk())
+                .andDo(document("list-users"));
+    }
+
+}
+```
+此外，除了配置输出目录，`@AutoConfigureRestDocs`也能配置将出现在任何文档化的URLs中的部分，比如host，scheme和port等。如果需要控制更多Spring REST Docs的配置，你可以使用`RestDocsMockMvcConfigurationCustomizer` bean：
+```java
+@TestConfiguration
+static class CustomizationConfiguration
+        implements RestDocsMockMvcConfigurationCustomizer {
+
+    @Override
+    public void customize(MockMvcRestDocumentationConfigurer configurer) {
+        configurer.snippets().withTemplateFormat(TemplateFormats.markdown());
+    }
+
+}
+```
+如果想充分利用Spring REST Docs对参数化输出目录的支持，你可以创建一个`RestDocumentationResultHandler` bean，自动配置将使用它调用`alwaysDo`方法，进而促使每个`MockMvc`调用都会自动产生默认片段：
+```java
+@TestConfiguration
+static class ResultHandlerConfiguration {
+
+    @Bean
+    public RestDocumentationResultHandler restDocumentation() {
+        return MockMvcRestDocumentation.document("{method-name}");
+    }
+
+}
+```
+### 40.3.11 使用Spock测试Spring Boot应用
+
+如果想使用Spock测试Spring Boot应用，你需要为应用添加Spock的`spock-spring`依赖，该依赖已将Spring测试框架集成进Spock，怎么使用Spock测试Spring Boot应用取决于你使用的Spock版本。
+
+**注** Spring Boot为Spock 1.0提供依赖管理，如果希望使用Spock 1.1，你需要覆盖`build.gradle`或`pom.xml`文件中的`spock.version`属性。
+
+当使用Spock 1.1时，只能使用[上述注解](http://docs.spring.io/spring-boot/docs/1.4.1.RELEASE/reference/htmlsingle/#boot-features-testing-spring-boot-applications)，你可以使用`@SpringBootTest`注解你的`Specification`以满足测试需求。
+
+当使用Spock 1.0时，`@SpringBootTest`将不能用于web项目，你需要使用`@SpringApplicationConfiguration`和`@WebIntegrationTest(randomPort = true)`。
+不能使用`@SpringBootTest`也就意味着你失去了自动配置的`TestRestTemplate` bean，不过可以通过以下配置创建一个等价的bean：
+```java
+@Configuration
+static class TestRestTemplateConfiguration {
+
+    @Bean
+    public TestRestTemplate testRestTemplate(
+            ObjectProvider<RestTemplateBuilder> builderProvider,
+            Environment environment) {
+        RestTemplateBuilder builder = builderProvider.getIfAvailable();
+        TestRestTemplate template = builder == null ? new TestRestTemplate()
+                : new TestRestTemplate(builder.build());
+        template.setUriTemplateHandler(new LocalHostUriTemplateHandler(environment));
+        return template;
+    }
+
+}
+```
 ### 40.4 测试工具类
 一些测试工具类也打包进了`spring-boot`，在测试时使用它们会有很大帮助。
 ### 40.4.1 ConfigFileApplicationContextInitializer
