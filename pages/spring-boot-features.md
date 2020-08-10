@@ -1541,7 +1541,7 @@ Spring Boot 非常适合用于开发 web 应用程序。您可以使用嵌入式
 
 如果您尚未开发过 Spring Boot web 应用程序，则可以按照[入门](#getting-started-first-application)章节中的“Hello World!”示例进行操作。
 
-<a id="boot-features-spring-mvc"></a>
+
 
 ### 28.1、Spring Web MVC 框架
 
