@@ -52,7 +52,7 @@ gitbook build
 | [一、Spring Boot 文档](pages/boot-documentation.md#boot-documentation) | 100% |
 | [二、入门](pages/getting-started.md) | 100% |
 | [三、使用 Spring Boot](pages/using-spring-boot.md) | 100% |
-| [四、Spring Boot 特性](pages/spring-boot-features.md#boot-features) | 98% (缺少章节： **45、测试**)|
+| [四、Spring Boot 特性](pages/spring-boot-features.md#boot-features) | 100% (已补充章节： **45、测试（基于2.2.6）**)|
 | [五、Spring Boot Actuator: 生产就绪功能](pages/production-ready.md#production-ready) | 100% |
 | [六、部署 Spring Boot 应用程序](deployment.md) | 1% |
 | 七、Spring Boot CLI | 0% |
