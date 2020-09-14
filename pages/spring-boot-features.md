@@ -1582,7 +1582,7 @@ Spring Boot 提供了适用于大多数 Spring MVC 应用的自动配置（auto-
 
 自动配置在 Spring 默认功能上添加了以下功能：
 
-- 引入 `ContentNegotiatingViewResolver` 和 `BeanNameViewResolver` bean。
+- 引入 `ContentNegotiatingViewResolver` 和 `BeanNameViewResolver` bean。视图对象决定转发或重定向
 - 支持服务静态资源，包括对 WebJar 的支持（[见下文](#boot-features-spring-mvc-static-content)）。
 - 自动注册 `Converter`、`GenericConverter` 和 `Formatter` bean。
 - 支持 `HttpMessageConverter`（见[下文](#boot-features-spring-mvc-message-converters)）。
