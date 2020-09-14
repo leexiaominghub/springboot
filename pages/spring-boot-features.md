@@ -1582,14 +1582,45 @@ Spring Boot 提供了适用于大多数 Spring MVC 应用的自动配置（auto-
 
 自动配置在 Spring 默认功能上添加了以下功能：
 
-- 引入 `ContentNegotiatingViewResolver` 和 `BeanNameViewResolver` bean。视图对象决定转发或重定向
+- 引入 `ContentNegotiatingViewResolver` 和 `BeanNameViewResolver` bean。
+
+  - 视图对象决定如何渲染（转发或重定向）
+  - `ContentNegotiatingViewResolver` 组合所有视图解析器
+  - 如何定制：可以在容器中添加视图解析器，上面的bean就会自动组合
+
 - 支持服务静态资源，包括对 WebJar 的支持（[见下文](#boot-features-spring-mvc-static-content)）。
+
 - 自动注册 `Converter`、`GenericConverter` 和 `Formatter` bean。
+
+  - Convert：转换器。public String hello(User user) 类型转换器
+
+  - Formatter：格式转换器20200912->Data
+
+    ```java
+    		@Bean
+    		@Override
+    		public FormattingConversionService mvcConversionService() {
+    			WebConversionService conversionService = new WebConversionService(this.mvcProperties.getDateFormat());
+    			addFormatters(conversionService);
+    			return conversionService;
+    		}
+    ```
+
 - 支持 `HttpMessageConverter`（见[下文](#boot-features-spring-mvc-message-converters)）。
+
+  - 用来转换http请求和响应的，比如User---json
+
 - 自动注册 `MessageCodesResolver`（见[下文](#boot-features-spring-message-codes)）。
+
 - 支持静态 index.html。
+
 - 支持自定义 Favicon （见[下文](#boot-features-spring-mvc-favicon)）。
+
 - 自动使用 `ConfigurableWebBindingInitializer` bean（见[下文](#boot-features-spring-mvc-web-binding-initializer)）。
+
+  - 初始化webdatabinder；请求数据-JavaBean
+
+    web的所有自动场景org.springframework.boot.autoconfigure.web
 
 如果您想保留 Spring Boot MVC 的功能，并且需要添加其他 [MVC 配置](https://docs.spring.io/spring/docs/5.1.3.RELEASE/spring-framework-reference/web.html#mvc)（interceptor、formatter 和视图控制器等），可以添加自己的 `WebMvcConfigurerAdapter` 类型的 `@Configuration` 类，但**不能**带 `@EnableWebMvc` 注解。如果您想自定义 `RequestMappingHandlerMapping`、`RequestMappingHandlerAdapter` 或者 `ExceptionHandlerExceptionResolver` 实例，可以声明一个 `WebMvcRegistrationsAdapter` 实例来提供这些组件。
 
