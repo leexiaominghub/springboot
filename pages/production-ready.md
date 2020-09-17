@@ -2,13 +2,13 @@
 
 # 五、Spring Boot Actuator: 生产就绪功能
 
-Spring Boot 包含许多其他功能，可帮助你在将应用程序推送到生产环境时监控和管理应用程序。你可以选择使用 HTTP 端点或 JMX 来管理和监控应用程序。审计、健康和指标收集也可以自动应用于你的应用程序。
+Spring Boot 包含的附加功能可帮助你在将应用程序推送到生产环境后，对应用程序进行监控管理。可供选择管理和监控应用程序的方式有：HTTP 端点或JMX 。审计、健康和指标收集也可以自动应用于你的应用程序。
 
 <a id="production-ready-enabling"></a>
 
 ## 52、启用生产就绪功能
 
-[`spring-boot-actuator`](https://github.com/spring-projects/spring-boot/tree/v2.1.3.RELEASE/spring-boot-project/spring-boot-actuator) 模块提供了 Spring Boot 的所有生产就绪功能。启用这些功能的最简单方法是添加 `spring-boot-starter-actuator` starter 到依赖中。
+[`spring-boot-actuator`](https://github.com/spring-projects/spring-boot/tree/v2.1.3.RELEASE/spring-boot-project/spring-boot-actuator) 模块提供了 Spring Boot 的所有生产就绪功能。启用这些功能的最简单方法是添加 `spring-boot-starter-actuator` 启动器到依赖中。
 
 <blockquote>
 
@@ -41,11 +41,11 @@ dependencies {
 
 ## 53、端点
 
-通过 Actuator 端点，你可以监控应用程序并与之交互。Spring Boot 包含许多内置端点，也允许你添加自己的端点。例如，`health` 端点提供基本的应用程序健康信息。
+你可以通过Actuator 端点监视应用程序并与之交互。Spring Boot 包含许多内置端点，也允许你添加自己的端点。例如，`health` 端点提供基本的应用程序健康信息。
 
-可以[启用或禁用](#production-ready-endpoints-enabling-endpoints)每个端点。它可控制当其 bean 存在于应用程序上下文中是否创建端点。要进行远程访问，必须[通过 JMX 或 HTTP 暴露端点](#production-ready-endpoints-exposing-endpoints)。大多数应用程序选择 HTTP 方式，端点的 ID 以及 `/actuator` 的前缀映射到一个 URL。例如，默认情况下，`health` 端点映射到 `/actuator/health`。
+每个端点均可[启用或禁用](#production-ready-endpoints-enabling-endpoints)，以及是否通过HTTP或JMX暴露（可被远程访问）。端点只有在同时启用和暴露时才可用。内置端点只有在可用时才会被自动配置。大多数应用程序选择 HTTP 方式，端点的 ID 以及 `/actuator` 前缀映射到一个 URL。例如，默认情况下`health` 端点映射到 `/actuator/health`。
 
-可以使用以下与技术无关的端点：
+可用的技术无关端点如下：
 
 | ID | 描述 | 默认启用 |
 | --- | --- | :---: |
@@ -53,7 +53,7 @@ dependencies {
 | `beans` | 显示应用程序中所有 Spring bean 的完整列表。 | 是 |
 | `caches` | 暴露可用的缓存。 | 是 |
 | `conditions` | 显示在配置和自动配置类上评估的条件以及它们匹配或不匹配的原因。 | 是 |
-| `configprops` | 显示所有 `@ConfigurationProperties` 的校对清单。 | 是 | 
+| `configprops` | 显示所有 `@ConfigurationProperties` 的校对清单。 | 是 |
 | `env` | 暴露 Spring `ConfigurableEnvironment` 中的属性。 | 是 |
 | `flyway` | 显示已应用的 Flyway 数据库迁移。 | 是 |
 | `health` | 显示应用程序健康信息 | 是 |
@@ -84,7 +84,7 @@ dependencies {
 
 ### 53.1、启用端点
 
-默认情况下，Actuator 启用除 `shutdown` 之外的所有端点。要配置端点的启用，请使用其 `management.endpoint.<id>.enabled` 属性。以下示例展示了如何启用关闭端点：
+默认情况下，Actuator 启用除 `shutdown` 之外的所有端点。使用 `management.endpoint.<id>.enabled` 属性可配置启用端点。以下示例为启用shutdown端点：
 
 ```ini
 management.endpoint.shutdown.enabled=true
@@ -136,13 +136,13 @@ management.endpoint.info.enabled=true
 要更改暴露的端点，请使用以下特定的 `include` 和 `exclude` 属性：
 
 | 属性 | 默认 |
-| --- | --- | 
+| --- | --- |
 | `management.endpoints.jmx.exposure.exclude` | |
 | `management.endpoints.jmx.exposure.include` | `*` |
 | `management.endpoints.web.exposure.exclude` | |
 | `management.endpoints.web.exposure.include` | `info, health` |
 
-`include` 属性列出了暴露的端点的 ID。`exclude` 属性列出了不应暴露的端点的 ID。`exclude` 属性优先于 `include` 属性。可以使用端点 ID 列表配置 `include` 和 `exclude` 属性。
+`include` 属性列出了暴露的端点的 ID。`exclude` 属性列出了不应暴露的端点的 ID。`exclude` **属性优先于 `include` 属性**。可以使用端点 ID 列表配置 `include` 和 `exclude` 属性。
 
 例如，要停止通过 JMX 暴露所有端点并仅暴露 `health` 和 `info` 端点，请使用以下属性：
 
@@ -421,7 +421,11 @@ Web 端点或特定 Web 的端点扩展上的操作可以接收当前的 `java.s
 
 > 如果你已保护应用程序并希望使用 `always`，则安全配置必须允许经过身份验证和未经身份验证的用户对健康端点的访问。
 
-健康信息是从 [`HealthIndicatorRegistry`](https://github.com/spring-projects/spring-boot/tree/v2.1.3.RELEASE/spring-boot-project/spring-boot-actuator/src/main/java/org/springframework/boot/actuate/health/HealthIndicatorRegistry.java) 的内容中收集的（默认情况下，`ApplicationContext` 中定义的所有 [`HealthIndicator`](https://github.com/spring-projects/spring-boot/tree/v2.1.3.RELEASE/spring-boot-project/spring-boot-actuator/src/main/java/org/springframework/boot/actuate/health/HealthIndicator.java) 实例）。Spring Boot 包含许多自动配置的 `HealthIndicators`，你也可以自己编写。默认情况下，最终系统状态由 `HealthAggregator` 根据状态的有序列表对每个 `HealthIndicator` 的状态进行排序。排序列表中的第一个状态作为整体健康状态。如果没有 `HealthIndicator` 返回一个 `HealthAggregator` 已知的状态，则使用 `UNKNOWN` 状态。
+健康信息是从 [`HealthIndicatorRegistry`](https://github.com/spring-projects/spring-boot/tree/v2.1.3.RELEASE/spring-boot-project/spring-boot-actuator/src/main/java/org/springframework/boot/actuate/health/HealthIndicatorRegistry.java) 的内容中收集的（默认情况下，`ApplicationContext` 中定义的所有 [`HealthIndicator`](https://github.com/spring-projects/spring-boot/tree/v2.1.3.RELEASE/spring-boot-project/spring-boot-actuator/src/main/java/org/springframework/boot/actuate/health/HealthIndicator.java) 实例）。Spring Boot 包含许多自动配置的 `HealthIndicators`，你也可自定义。
+
+`HealthContributor` 可以是 `HealthIndicator` 或`CompositeHealthContributor`.  `HealthIndicator` 提供确切的健康信息, 并包含 `Status`.  `CompositeHealthContributor` 提供 `HealthContributors`的组合. 以上结构一起，树状结构的提供者展示了整个系统健康状况.
+
+默认情况下，最终系统状态由 `StatusAggregator ` 生成，它会根据状态的有序列表对每个 `HealthIndicator` 的状态进行排序。排序列表中的第一个状态作为整体健康状态。如果没有 `HealthIndicator` 返回`StatusAggregator`可识别的状态，则使用 `UNKNOWN` 状态。
 
 **提示**
 
@@ -431,7 +435,7 @@ Web 端点或特定 Web 的端点扩展上的操作可以接收当前的 `java.s
 
 #### 53.8.1、自动配置的 HealthIndicator
 
-适当时，Spring Boot 会自动配置以下 `HealthIndicator`：
+Spring Boot 会适当地自动配置以下 `HealthIndicator`：
 
 | 名称 | 描述 |
 | --- | --- |
@@ -593,7 +597,6 @@ info.app.java.target=1.8
 **提示**
 
 <blockquote>
-
 你可以在[构建时扩展 info 属性](how-to.md#howto-automatic-expansion)，而不是对这些值进行硬编码。
 假设你使用 Maven，你可以按如下方式重写前面的示例：
 
@@ -907,7 +910,7 @@ Spring Boot Actuator 为 [Micrometer](https://micrometer.io/) 提供了依赖管
 
 Spring Boot 自动配置了一个组合的 `MeterRegistry`，并为 classpath 中每个受支持的实现向该组合注册一个注册表。在运行时，只需要 classpath 中有 `micrometer-registry-{system}` 依赖即可让 Spring Boot 配置该注册表。
 
-大部分注册表都有共同点 例如，即使 Micrometer 注册实现位于 classpath 上，你也可以禁用特定的注册表。例如，要禁用 Datadog：
+大部分注册表都有共同点 例如，即使 Micrometer Registry实现位于 classpath 上，你也可以禁用特定的注册表。例如，要禁用 Datadog：
 
 ```ini
 management.metrics.export.datadog.enabled=false
